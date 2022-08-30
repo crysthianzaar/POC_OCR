@@ -8,3 +8,12 @@ class RotuloForm(forms.ModelForm):
     class Meta:
         model = Rotulo
         fields = ['rotulo']
+
+class DadosForm(forms.ModelForm):
+    meter = forms.CharField()
+    lote = forms.CharField()
+    artikel = forms.CharField()
+
+    class Meta:
+        model = DadosRotulo
+        fields = ['meter','lote','artikel']
