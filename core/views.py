@@ -1,3 +1,5 @@
+import base64
+from pyexpat import model
 from tempfile import NamedTemporaryFile
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
@@ -7,15 +9,16 @@ from django.http import JsonResponse
 from django.core.files import File
 from django.core.files.base import ContentFile
 from django.core.files.temp import NamedTemporaryFile
-import environ
 from urllib.request import urlopen
+import environ
 from PIL import Image
 import os
 import shutil
-import re
 import glob
 import cv2
 import pytesseract
+
+from core import models
 
 env = environ.Env()
 environ.Env.read_env()
@@ -24,7 +27,7 @@ def index(request):
     return render(request, 'index.html')
 
 def call_camera(request):
-    return render(request, 'base.html')
+    return render(request, 'image.html')
 
 def scanner(request):
     form = DadosForm(request.POST)
@@ -74,6 +77,42 @@ def camera(request):
     return render(request, 'base.html', {'form': form})
 
 
+def image_upload(request):
+    if request.method== 'POST':        
+       img = request.POST.get("photo").replace('data:image/png;base64,', '')
+       image_file_like = base64.b64decode(img)
+       f = open("temp.JPEG", "wb")
+       f.write(image_file_like)
+       f.close()
+       img = cv2.imread("temp.JPEG", cv2.IMREAD_GRAYSCALE)
+       cv2.dilate(img, (5, 5), img)
+       pytesseract.pytesseract.tesseract_cmd = env(
+            'OCR_ENGINE_DIRECTORY')
+       string = pytesseract.image_to_string(img)
+       print(string)
+    try:
+        meter = tratamento_meter(string)
+        lote = tratamento_lote(string)
+        artikel = tratamento_artikel(string)
+    except:
+        pass
+    try:
+        DadosRotulo.objects.create(
+            meter=meter,
+            lote=lote,
+            artikel=artikel
+        )
+    
+        form_result = DadosForm(initial={'meter': meter,'lote': lote, 'artikel': artikel })
+
+        return render(request, 'form_result.html', {'form': form_result})
+    except:
+        context = {'string': string}
+        return render(request, 'error.html',context=context)
+    
+
+    
+
 def delete():
     try:
         folder = os.getcwd() + '/media/images'
@@ -115,26 +154,3 @@ def tratamento_artikel(string: str) -> int:
     artikel = string[string.rfind("Ar"):string.rfind("Meter"):]
     artikel = int(''.join(i for i in artikel if i.isdigit()))
     return artikel
-
-def image_upload(request):
-    context = dict()
-    if request.method == 'POST':
-        image_path = request.POST["src"]  # src is the name of input attribute in your html file, this src value is set in javascript code
-        image = NamedTemporaryFile()
-        data = urlopen(os.path).read()
-        image.write(data)
-        image.flush()
-        image = File(image)
-        name = str(image.name).split('\\')[-1]
-        name += '.jpg'  # store image in jpeg format
-        image.name = name
-        if image is not None:
-            obj = Rotulo.objects.create(rotulo=image)  # create a object of Image type defined in your model
-            obj.save()
-            context["path"] = obj.image.url  #url to image stored in my server/local device
-            context["username"] = obj.username
-        else :
-            return redirect('/')
-    return render(request, 'image.html', context=context)
-
-

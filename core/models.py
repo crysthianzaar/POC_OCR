@@ -9,6 +9,3 @@ class DadosRotulo(models.Model):
     meter = models.CharField(max_length=100)
     lote = models.CharField(max_length=100)
     artikel = models.CharField(max_length=100)
-
-class Image(models.Model):
-    image = models.ImageField(upload_to='images')

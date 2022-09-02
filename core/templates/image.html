@@ -12,24 +12,16 @@
     <body>
         <div class="contentarea">
             <div class="Input">
-                <form method="POST" name="inputForm" enctype='multipart/form-data'>
+                <form method="POST" action="{% url 'image_upload' %}" enctype="multipart/form-data">
                     {% csrf_token %}
-                    <div id="camera" class="camera">
-                        <video id="video">Video stream not available.</video>
-                        <button id="startbutton" type="button">Take photo</button>
-                        <input id="webimg" value="" name="src" type="text" style="display: none;">
-                        <canvas id="canvas">
-                        </canvas>
-                    </div>
-                    <br>
-                    <div>
-                        <img id="photo" alt="your image">
-                    </div>
-                    <br>
-                    <button type="submit" class="button" id="submit">Submit</button>
+                     <video id="video" autoplay ></video>                               
+            <canvas id="canvas"></canvas>                                
+                     
+            <input type="hidden" name="photo" id="photo" value=""/>
+            <button id="startbutton1" class="btn btn-outline-secondary btn-sm">Tirar Foto</button>
+            <button id="submit" type="submit">Enviar Foto</button>
                 </form>
             </div>
-           <img src="{{media}}" alt="The screen capture will appear in this box.">
         </div>
     </body>
     {% endblock %}
